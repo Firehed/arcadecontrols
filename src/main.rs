@@ -9,6 +9,11 @@ use std::io::{Read, Write};
 const I2C_SLAVE: u16 = 0x0703;
 ioctl!(bad ioctl_set_i2c_slave_address with I2C_SLAVE);
 
+enum MCP23017 {
+    GpioA,
+    GpioB,
+}
+
 fn main() {
     let path = "/dev/i2c-1";
     let fh = OpenOptions::new()
@@ -28,14 +33,14 @@ fn main() {
 
     set_slave_address(&file, slave_address);
 
-    prepare_gpio(&file, "A");
-    prepare_gpio(&file, "B");
+    prepare_gpio(&file, MCP23017::GpioA);
+    prepare_gpio(&file, MCP23017::GpioB);
 
     println!("Saw '{}', '{}'", read_pin(&file, b"\x09"), read_pin(&file, b"\x19"));
 
 }
 
-fn prepare_gpio(mut fd: &File, bus_id: &str) {
+fn prepare_gpio(mut fd: &File, bus_id: MCP23017) {
     println!("GPIO preparing");
     // Write 0x84 to register 0x0A. If the chip is in BANK0 mode, this writes to IOCON to set
     // BANK=1 and ODR=1. If already in BANK1 mode, this writes to OLATA. This also keeps the
@@ -44,14 +49,11 @@ fn prepare_gpio(mut fd: &File, bus_id: &str) {
     // Write 0x00 to 0x0A. The above write guarantees being in BANK1, so this always writes to
     // OLATA, resetting it in case the previous write set something.
     fd.write_all(b"\x0a\x00");
-    let register: u8;
-    if (bus_id == "A") {
-        register = 0x00;
-    } else if (bus_id == "B") {
-        register = 0x10;
-    } else {
-        panic!("Bad GPIO thing");
-    }
+    let register = match bus_id {
+        MCP23017::GpioA => 0x00,
+        MCP23017::GpioB => 0x10,
+    };
+
     // IOCON has SEQOP on from above, so this writes the 7 hardcoded bytes starting at the register
     // determined above (e.g. write first byte to register 0x10, second to 0x11, etc). See Table
     // 1-2 in the MCP23017 spec sheet for addresses (IOCON.BANK=1)
