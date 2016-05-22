@@ -37,23 +37,35 @@ fn main() {
 
 fn prepare_gpio(mut fd: &File, bus_id: &str) {
     println!("GPIO preparing");
+    // Write 0x84 to register 0x0A. If the chip is in BANK0 mode, this writes to IOCON to set
+    // BANK=1 and ODR=1. If already in BANK1 mode, this writes to OLATA. This also keeps the
+    // default value of sequential operation (SEQOP)
     fd.write_all(b"\x0a\x84");
+    // Write 0x00 to 0x0A. The above write guarantees being in BANK1, so this always writes to
+    // OLATA, resetting it in case the previous write set something.
     fd.write_all(b"\x0a\x00");
+    let register: u8;
     if (bus_id == "A") {
-        // addr IODIR IPOL pinmask DEFVAL INTCON IOCON GPPU
-        // IODIR = xFF for all inputs
-        // IPOL = xFF to flip inputs (makes connection to ground = 1)
-        // pinmask(GPINTEN) = xFF use all pins
-        // DEFVAL = x00 default value something...?
-        // INTCON = x00 compare to previous or default
-        // IOCON = x84 ??????
-        // GPPU = xFF sets resistors for inputs
-        fd.write_all(b"\x00\xff\xff\xff\x00\x00\x84\xff");
+        register = 0x00;
     } else if (bus_id == "B") {
-        fd.write_all(b"\x10\xff\xff\xff\x00\x00\x84\xff");
+        register = 0x10;
     } else {
         panic!("Bad GPIO thing");
     }
+    // IOCON has SEQOP on from above, so this writes the 7 hardcoded bytes starting at the register
+    // determined above (e.g. write first byte to register 0x10, second to 0x11, etc). See Table
+    // 1-2 in the MCP23017 spec sheet for addresses (IOCON.BANK=1)
+    let seq = [
+        register,
+        0xFF, // IODIRn   = xFF for all inputs
+        0xFF, // IPOLn    = xFF to flip inputs (makes connection to ground = 1)
+        0xFF, // GPINTENn = xFF use all pins
+        0x00, // DEFVALn  = x00 default value something...?
+        0x00, // INTCONn  = x00 compare to previous or default
+        0x84, // IOCONn   = x84 like above
+        0xFF, // GPPUn    = xFF sets resistors for inputs
+    ];
+    fd.write_all(&seq);
 }
 
 fn read_pin(mut fd: &File, pin: &[u8]) -> u32 {
