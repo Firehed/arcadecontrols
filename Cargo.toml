@@ -1,0 +1,9 @@
+[package]
+name = "arcade"
+version = "0.1.0"
+authors = ["pi"]
+
+[dependencies]
+#i2cdev = "0.2.0"
+#ioctl = "^0.3"
+nix = "^0.5"
