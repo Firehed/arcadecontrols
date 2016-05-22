@@ -36,7 +36,9 @@ fn main() {
     prepare_gpio(&file, MCP23017::GpioA);
     prepare_gpio(&file, MCP23017::GpioB);
 
-    println!("Saw '{}', '{}'", read_pin(&file, b"\x09"), read_pin(&file, b"\x19"));
+    println!("Saw '{}', '{}'",
+             read_pin(&file, MCP23017::GpioA),
+             read_pin(&file, MCP23017::GpioB));
 
 }
 
@@ -70,8 +72,13 @@ fn prepare_gpio(mut fd: &File, bus_id: MCP23017) {
     fd.write_all(&seq);
 }
 
-fn read_pin(mut fd: &File, pin: &[u8]) -> u32 {
-    fd.write_all(pin);
+fn read_pin(mut fd: &File, gpio: MCP23017) -> u8 {
+    // Table 1.2 from spec sheet, BANK=1
+    let address = match gpio {
+        MCP23017::GpioA => 0x09,
+        MCP23017::GpioB => 0x19,
+    };
+    fd.write_all(&[address]); // String cast of sorts
     let mut buf = [0;1];
     fd.read(&mut buf);
     return buf_to_i32(&buf);
