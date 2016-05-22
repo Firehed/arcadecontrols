@@ -81,11 +81,7 @@ fn read_pin(mut fd: &File, gpio: MCP23017) -> u8 {
     fd.write_all(&[address]); // String cast of sorts
     let mut buf = [0;1];
     fd.read(&mut buf);
-    return buf_to_i32(&buf);
-}
-
-fn buf_to_i32(buf: &[u8]) -> u32 {
-    return buf.iter().rev().fold(0, |acc, &b| acc * 2 + b as u32);
+    return buf[0];
 }
 
 fn set_slave_address(file: &File, slave_address: u16) -> Result<(), nix::Error> {
