@@ -4,7 +4,7 @@ use std::io::Read;
 use yaml_rust::{Yaml, YamlLoader};
 
 pub fn load_config(path: String) -> Yaml {
-    let mut config = match File::open(path.as_str()) {
+    let mut config = match File::open(path) {
         Err(e) => panic!(e),
         Ok(x) => x,
     };
