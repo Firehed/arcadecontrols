@@ -25,6 +25,7 @@ pub struct Address {
 }
 
 #[allow(dead_code)]
+#[derive(Copy, Clone)]
 pub enum Device {
     Dev0,
     Dev1,
