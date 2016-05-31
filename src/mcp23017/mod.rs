@@ -77,6 +77,9 @@ fn init_side(i2c: &mut I2C, side: Side) {
 }
 
 impl MCP23017 {
+    pub fn new(i2c: I2C) -> MCP23017 {
+        from_i2c(i2c)
+    }
     /*
     pub fn getPinValue(&mut self, pin: Pin) -> bool {
         let i = match sideFromPin(pin) {

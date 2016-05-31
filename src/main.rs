@@ -7,6 +7,8 @@ mod config;
 mod mcp23017;
 mod i2c;
 
+use mcp23017::MCP23017;
+
 fn main() {
 
     let config: String = match env::args().nth(1) {
@@ -30,7 +32,7 @@ fn main() {
         Ok(x) => x,
     };
 
-    let mut mcp = mcp23017::from_i2c(i2c);
+    let mut mcp = MCP23017::new(i2c);
 
     for i in 1..10 {
         let x = mcp.read();
