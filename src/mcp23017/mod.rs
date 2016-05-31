@@ -1,5 +1,13 @@
 use i2c::I2C;
 
+#[allow(dead_code)]
+const BANK0_GPIOA: u8 = 0x12;
+#[allow(dead_code)]
+const BANK0_GPIOB: u8 = 0x13;
+
+const BANK1_GPIOA: u8 = 0x09;
+const BANK1_GPIOB: u8 = 0x19;
+
 #[derive(Debug)]
 pub struct ReadResult {
     a0: bool,
@@ -20,18 +28,13 @@ pub struct ReadResult {
     b7: bool,
 }
 
-pub enum Side {
-    GpioA,
-    GpioB,
-}
-
-//pub enum Pin {
-//    // A0-7, B0-7
-//    GpioB0,
-//}
-
 pub struct MCP23017 {
     i2c: I2C,
+}
+
+enum Side {
+    GpioA,
+    GpioB,
 }
 
 fn set_chip_to_bank1(i2c: &mut I2C) {
@@ -75,17 +78,6 @@ impl MCP23017 {
             i2c: i2c,
         }
     }
-    /*
-    pub fn getPinValue(&mut self, pin: Pin) -> bool {
-        let i = match sideFromPin(pin) {
-            Side::GpioA => 0x09,
-            Side::GpioB => 0x19,
-        };
-        self.i2c.write(&[i]);
-        // do read things
-        return true;
-    }
-    */
 
     pub fn read(&mut self) -> ReadResult {
         self.i2c.write(&[BANK1_GPIOA]);
@@ -113,19 +105,3 @@ impl MCP23017 {
         };
     }
 }
-
-/*
-fn sideFromPin(pin: Pin) -> Side {
-    match pin {
-        Pin::GpioB0 => Side::GpioB,
-    }
-}
-*/
-#[allow(dead_code)]
-const BANK0_GPIOA: u8 = 0x12;
-#[allow(dead_code)]
-const BANK0_GPIOB: u8 = 0x13;
-
-const BANK1_GPIOA: u8 = 0x09;
-const BANK1_GPIOB: u8 = 0x19;
-
