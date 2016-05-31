@@ -3,6 +3,7 @@ name = "arcade"
 version = "0.1.0"
 dependencies = [
  "nix 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "yaml-rust 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -23,4 +24,9 @@ dependencies = [
  "bitflags 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "yaml-rust"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 

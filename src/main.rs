@@ -1,9 +1,22 @@
 #[macro_use] extern crate nix;
+extern crate yaml_rust;
 
+use std::env;
+
+mod config;
 mod mcp23017;
 mod i2c;
 
 fn main() {
+
+    let config: String = match env::args().nth(1) {
+        Some(value) => value,
+        None => "config.yaml".to_string(),
+    };
+
+
+    let config_yaml = config::load_config(config);
+
 //    let path = "/dev/i2c-1";
     let path = "out.txt";
     let i2c = match i2c::from_path_and_address(path, 0x20) {
