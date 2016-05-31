@@ -34,16 +34,6 @@ pub struct MCP23017 {
     i2c: I2C,
 }
 
-pub fn from_i2c(mut i2c: I2C) -> MCP23017 {
-    set_chip_to_bank1(&mut i2c);
-    init_side(&mut i2c, Side::GpioA);
-    init_side(&mut i2c, Side::GpioB);
-
-    return MCP23017 {
-        i2c: i2c,
-    };
-}
-
 fn set_chip_to_bank1(i2c: &mut I2C) {
     // Write 0x84 to register 0x0A. If the chip is in BANK0 mode, this writes to IOCON to set
     // BANK=1 and ODR=1. If already in BANK1 mode, this writes to OLATA. This also keeps the
@@ -77,8 +67,13 @@ fn init_side(i2c: &mut I2C, side: Side) {
 }
 
 impl MCP23017 {
-    pub fn new(i2c: I2C) -> MCP23017 {
-        from_i2c(i2c)
+    pub fn new(mut i2c: I2C) -> MCP23017 {
+        set_chip_to_bank1(&mut i2c);
+        init_side(&mut i2c, Side::GpioA);
+        init_side(&mut i2c, Side::GpioB);
+        MCP23017 {
+            i2c: i2c,
+        }
     }
     /*
     pub fn getPinValue(&mut self, pin: Pin) -> bool {
@@ -126,7 +121,9 @@ fn sideFromPin(pin: Pin) -> Side {
     }
 }
 */
+#[allow(dead_code)]
 const BANK0_GPIOA: u8 = 0x12;
+#[allow(dead_code)]
 const BANK0_GPIOB: u8 = 0x13;
 
 const BANK1_GPIOA: u8 = 0x09;
