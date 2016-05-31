@@ -3,6 +3,7 @@ use std::fs::{File, OpenOptions};
 use std::io::{Read, Write, Error as IOError};
 use std::os::unix::io::AsRawFd;
 
+// /usr/include/linux/i2c-dev.h
 const I2C_SLAVE: u16 = 0x0703;
 ioctl!(bad ioctl_set_i2c_slave_address with I2C_SLAVE);
 
