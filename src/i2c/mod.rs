@@ -18,7 +18,23 @@ pub enum Error {
 
 pub type I2CResult = Result<I2C, Error>;
 
-pub fn from_path_and_address(path: &str, address: u16) -> I2CResult {
+pub struct Address {
+    pub a0: bool,
+    pub a1: bool,
+    pub a2: bool,
+}
+
+#[allow(dead_code)]
+pub enum Device {
+    Dev0,
+    Dev1,
+}
+
+pub fn from_device_and_address(device: Device, address: Address) -> I2CResult {
+    let path = match device {
+        Device::Dev0 => "/dev/i2c-0",
+        Device::Dev1 => "/dev/i2c-1",
+    };
     let fh = OpenOptions::new()
         .read(true)
         .write(true)
@@ -51,12 +67,22 @@ impl I2C {
 }
 
 #[allow(dead_code)]
-fn set_slave_address(file: &File, slave_address: u16) -> Result<(), nix::Error> {
+fn set_slave_address(file: &File, slave_address: Address) -> Result<(), nix::Error> {
+    let mut address = 0x20;
+    if slave_address.a0 {
+        address = address | 0x01;
+    }
+    if slave_address.a1 {
+        address = address | 0x02;
+    }
+    if slave_address.a2 {
+        address = address | 0x04;
+    }
     // TODO: remove this once back on real HW
     return Ok(());
     let fd = file.as_raw_fd();
     try!(unsafe {
-        ioctl_set_i2c_slave_address(fd, slave_address as *mut u8)
+        ioctl_set_i2c_slave_address(fd, address as *mut u8)
     });
     return Ok(());
 }

@@ -7,6 +7,7 @@ mod config;
 mod mcp23017;
 mod i2c;
 
+use i2c::{ Address, Device };
 use mcp23017::MCP23017;
 
 fn main() {
@@ -19,9 +20,10 @@ fn main() {
 
     let config_yaml = config::load_config(config);
 
+    let device = Device::Dev1;
+    let address = Address { a0: false, a1: false, a2: true };
 //    let path = "/dev/i2c-1";
-    let path = "out.txt";
-    let i2c = match i2c::from_path_and_address(path, 0x20) {
+    let i2c = match i2c::from_device_and_address(device, address) {
         Err(e) => {
             match e {
                 i2c::Error::FileOpenError(x) => println!("Couldn't open i2c: {}", x),
