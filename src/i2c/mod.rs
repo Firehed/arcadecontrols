@@ -32,10 +32,7 @@ pub enum Device {
 }
 
 pub fn from_device_and_address(device: Device, address: Address) -> I2CResult {
-    let path = match device {
-        Device::Dev0 => "/dev/i2c-0",
-        Device::Dev1 => "/dev/i2c-1",
-    };
+    let path = device.to_fs_path();
     let fh = OpenOptions::new()
         .read(true)
         .write(true)
@@ -91,5 +88,14 @@ impl Address {
             address = address | 0x04;
         }
         return address;
+    }
+}
+
+impl Device {
+    pub fn to_fs_path(&self) -> &str {
+        return match *self {
+            Device::Dev0 => "/dev/i2c-0",
+            Device::Dev1 => "/dev/i2c-1",
+        };
     }
 }
