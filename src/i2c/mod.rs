@@ -69,21 +69,27 @@ impl I2C {
 
 #[allow(dead_code)]
 fn set_slave_address(file: &File, slave_address: Address) -> Result<(), nix::Error> {
-    let mut address = 0x20;
-    if slave_address.a0 {
-        address = address | 0x01;
-    }
-    if slave_address.a1 {
-        address = address | 0x02;
-    }
-    if slave_address.a2 {
-        address = address | 0x04;
-    }
     // TODO: remove this once back on real HW
     return Ok(());
     let fd = file.as_raw_fd();
     try!(unsafe {
-        ioctl_set_i2c_slave_address(fd, address as *mut u8)
+        ioctl_set_i2c_slave_address(fd, slave_address.as_int() as *mut u8)
     });
     return Ok(());
+}
+
+impl Address {
+    pub fn as_int(&self) -> u8 {
+        let mut address = 0x20;
+        if self.a0 {
+            address = address | 0x01;
+        }
+        if self.a1 {
+            address = address | 0x02;
+        }
+        if self.a2 {
+            address = address | 0x04;
+        }
+        return address;
+    }
 }
