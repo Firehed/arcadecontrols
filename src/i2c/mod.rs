@@ -18,6 +18,7 @@ pub enum Error {
 
 pub type I2CResult = Result<I2C, Error>;
 
+#[derive(Copy, Clone)]
 pub struct Address {
     pub a0: bool,
     pub a1: bool,

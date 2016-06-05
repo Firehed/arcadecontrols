@@ -7,8 +7,21 @@ use yaml_rust::{Yaml, YamlLoader};
 use yaml_rust::yaml::Hash;
 
 pub struct Config {
-    pub chip: MCP23017
+    pub address: Address,
+    pub bus: Device,
+    pub chip: MCP23017,
 }
+
+impl Config {
+    fn new(bus: Device, address: Address) -> Config {
+        return Config {
+            address: address,
+            bus: bus,
+            chip: get_chip(bus, address),
+        };
+    }
+}
+
 pub fn from_file(path: String) -> Vec<Config> {
     let yaml = parse_config_file(path);
     let mut configs: Vec<Config> = Vec::new();
@@ -44,8 +57,8 @@ fn parse_config_file(path: String) -> Yaml {
 fn parse_bus(data: &Hash, bus: Device) -> Vec<Config> {
     // TODO: actually implement this, support all addresses
     vec![
-        Config { chip: get_chip(bus, Address { a0: false, a1: false, a2: false }) },
-        Config { chip: get_chip(bus, Address { a0: true,  a1: true,  a2: true  }) },
+        Config::new(bus, Address { a0: false, a1: false, a2: false }),
+        Config::new(bus, Address { a0: true,  a1: true,  a2: true  }),
     ]
 }
 
