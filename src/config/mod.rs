@@ -1,5 +1,5 @@
 use i2c;
-use i2c::{ Address, Device };
+use i2c::{ Address, Bus };
 use mcp23017::MCP23017;
 use std::fs::File;
 use std::io::Read;
@@ -8,12 +8,12 @@ use yaml_rust::yaml::Hash;
 
 pub struct Config {
     pub address: Address,
-    pub bus: Device,
+    pub bus: Bus,
     pub chip: MCP23017,
 }
 
 impl Config {
-    fn new(bus: Device, address: Address) -> Config {
+    fn new(bus: Bus, address: Address) -> Config {
         return Config {
             address: address,
             bus: bus,
@@ -29,7 +29,7 @@ pub fn from_file(path: String) -> Vec<Config> {
     // TODO: implement this for all buses
     match yaml["dev1"] {
         Yaml::Hash(ref v) => {
-            let mut y = parse_bus(v, Device::Dev1);
+            let mut y = parse_bus(v, Bus::Dev1);
             configs.append(&mut y);
         },
         _ => {
@@ -54,7 +54,7 @@ fn parse_config_file(path: String) -> Yaml {
     return parsed[0].clone();
 }
 
-fn parse_bus(data: &Hash, bus: Device) -> Vec<Config> {
+fn parse_bus(data: &Hash, bus: Bus) -> Vec<Config> {
     // TODO: actually implement this, support all addresses
     vec![
         Config::new(bus, Address { a0: false, a1: false, a2: false }),
@@ -62,7 +62,7 @@ fn parse_bus(data: &Hash, bus: Device) -> Vec<Config> {
     ]
 }
 
-fn get_chip(bus: Device, address: Address) -> MCP23017 {
+fn get_chip(bus: Bus, address: Address) -> MCP23017 {
     let i2c = match i2c::from_device_and_address(bus, address) {
         Err(e) => {
             match e {

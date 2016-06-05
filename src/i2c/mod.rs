@@ -27,12 +27,12 @@ pub struct Address {
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
-pub enum Device {
+pub enum Bus {
     Dev0,
     Dev1,
 }
 
-pub fn from_device_and_address(device: Device, address: Address) -> I2CResult {
+pub fn from_device_and_address(device: Bus, address: Address) -> I2CResult {
     let path = device.to_fs_path();
     let fh = OpenOptions::new()
         .read(true)
@@ -92,11 +92,11 @@ impl Address {
     }
 }
 
-impl Device {
+impl Bus {
     pub fn to_fs_path(&self) -> &str {
         return match *self {
-            Device::Dev0 => "/dev/i2c-0",
-            Device::Dev1 => "/dev/i2c-1",
+            Bus::Dev0 => "/dev/i2c-0",
+            Bus::Dev1 => "/dev/i2c-1",
         };
     }
 }
