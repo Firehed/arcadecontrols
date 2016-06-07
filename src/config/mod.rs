@@ -1,10 +1,8 @@
 use i2c;
 use i2c::{ Address, Bus };
 use mcp23017::MCP23017;
-use std::fs::File;
-use std::io::Read;
-use yaml_rust::{Yaml, YamlLoader};
-use yaml_rust::yaml::Hash;
+use ini::Ini;
+
 
 pub struct Config {
     pub address: Address,
@@ -22,45 +20,40 @@ impl Config {
     }
 }
 
-pub fn from_file(path: String) -> Vec<Config> {
-    let yaml = parse_config_file(path);
-    let mut configs: Vec<Config> = Vec::new();
+pub fn from_file(path: &str) -> Vec<Config> {
+    let conf = Ini::load_from_file(path).unwrap();
 
-    // TODO: implement this for all buses
-    match yaml["dev1"] {
-        Yaml::Hash(ref v) => {
-            let mut y = parse_bus(v, Bus::Dev1);
-            configs.append(&mut y);
-        },
-        _ => {
-            println!("got nothing or wrong");
-        }
+    let bus = conf.general_section().get("bus").unwrap();
+    let bus = match bus.parse::<u8>().unwrap() {
+        0 => Bus::Dev0,
+        _ => Bus::Dev1,
     };
 
-    return configs;
+    return (0x20..0x28)
+        .map(|i| {
+            return (
+                i,
+                format!("0x{:x}", i)
+            );
+        })
+        .map(|(i, name)| {
+            return (
+                i,
+                conf.section(Some(name).to_owned())
+            );
+        })
+        .filter(|&(_, parsed)| {
+            // Remove addresses with no config
+            return !parsed.is_none();
+        })
+        .map(|(i, parsed)| {
+            // TODO: actually use the parsed section to set up bindings
+            let addr = Address::new(i);
+            return Config::new(bus, addr);
+        })
+        .collect();
 }
 
-fn parse_config_file(path: String) -> Yaml {
-    let mut config = match File::open(path) {
-        Err(e) => panic!(e),
-        Ok(x) => x,
-    };
-    let mut content = String::new();
-    let _ = match config.read_to_string(&mut content) {
-        Err(e) => panic!(e),
-        Ok(_) => (),
-    };
-    let parsed = YamlLoader::load_from_str(content.as_str()).unwrap();
-    return parsed[0].clone();
-}
-
-fn parse_bus(data: &Hash, bus: Bus) -> Vec<Config> {
-    // TODO: actually implement this, support all addresses
-    vec![
-        Config::new(bus, Address { a0: false, a1: false, a2: false }),
-        Config::new(bus, Address { a0: true,  a1: true,  a2: true  }),
-    ]
-}
 
 fn get_chip(bus: Bus, address: Address) -> MCP23017 {
     let i2c = match i2c::from_device_and_address(bus, address) {

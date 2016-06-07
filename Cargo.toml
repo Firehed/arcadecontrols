@@ -7,4 +7,4 @@ authors = ["pi"]
 #i2cdev = "0.2.0"
 #ioctl = "^0.3"
 nix = "^0.5"
-yaml-rust = "*"
+rust-ini = "*"

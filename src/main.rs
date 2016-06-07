@@ -1,5 +1,5 @@
 #[macro_use] extern crate nix;
-extern crate yaml_rust;
+extern crate ini;
 
 mod config;
 mod mcp23017;
@@ -12,10 +12,10 @@ fn main() {
 
     let config_file: String = match env::args().nth(1) {
         Some(value) => value,
-        None => "config.yaml".to_string(),
+        None => "config.ini".to_string(),
     };
 
-    let mut devices = config::from_file(config_file);
+    let mut devices = config::from_file(&config_file);
 
     // TODO: loop {} or daemonize or something
     // This will become the main application loop
