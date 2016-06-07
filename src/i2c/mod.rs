@@ -77,6 +77,15 @@ fn set_slave_address(file: &File, slave_address: Address) -> Result<(), nix::Err
 }
 
 impl Address {
+    pub fn new(address: u8) -> Address {
+        // Check input range for supported addresses?
+        return Address {
+            a0: address & 0x01 == 0x01,
+            a1: address & 0x02 == 0x02,
+            a2: address & 0x04 == 0x04,
+        };
+    }
+
     pub fn as_int(&self) -> u8 {
         let mut address = 0x20;
         if self.a0 {
