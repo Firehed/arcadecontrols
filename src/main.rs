@@ -7,6 +7,7 @@ mod i2c;
 
 use config::Config;
 use std::env;
+use std::thread::sleep;
 
 fn main() {
 
@@ -17,13 +18,12 @@ fn main() {
 
     let mut devices = config::from_file(&config_file);
 
-    // TODO: loop {} or daemonize or something
-    // This will become the main application loop
-    for i in 0..10 {
-        println!("{}", i);
+    // TODO: daemonize or something
+    loop {
         for device in &mut devices {
             poll_device(device);
         }
+        sleep(std::time::Duration::new(1, 0));
     }
 }
 
