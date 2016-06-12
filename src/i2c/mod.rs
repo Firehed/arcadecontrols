@@ -55,23 +55,16 @@ pub fn from_device_and_address(device: Bus, address: Address) -> I2CResult {
 }
 
 impl I2C {
+
     pub fn write(&mut self, bytes: &[u8]) {
         let _ = self.fh.write_all(bytes);
     }
 
-    // Note: there doesn't seem to be a good way to parameterize the number of bytes read since the
-    // buffer needs to be sized at compile-time. I'm sure more digging will uncover a good way to
-    // handle this but I don't want to deal with it right now.
-    pub fn get_byte(&mut self) -> u8 {
-        let mut buf = [0; 1];
-        let _ = self.fh.read(&mut buf);
-        buf[0]
-    }
-
-    pub fn get_two_bytes(&mut self) -> (u8,u8) {
-        let mut buf = [0; 2];
-        let _ = self.fh.read(&mut buf);
-        (buf[0], buf[1])
+    pub fn read(&mut self, number_of_bytes: u64) -> Vec<u8> {
+        let mut buf = vec![];
+        let mut chunk = (&self.fh).take(number_of_bytes);
+        let _ = chunk.read_to_end(&mut buf);
+        buf
     }
 
 }

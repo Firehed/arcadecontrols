@@ -99,13 +99,14 @@ impl MCP23017 {
         let (side_a,side_b) = match self.bank {
             Bank::Bank0 => {
                 self.i2c.write(&[BANK0_GPIOA]);
-                self.i2c.get_two_bytes()
+                let vec = self.i2c.read(2);
+                (vec[0], vec[1])
             },
             Bank::Bank1 => {
                 self.i2c.write(&[BANK1_GPIOA]);
-                let side_a = self.i2c.get_byte();
+                let side_a = self.i2c.read(1)[0];
                 self.i2c.write(&[BANK1_GPIOB]);
-                let side_b = self.i2c.get_byte();
+                let side_b = self.i2c.read(1)[0];
                 (side_a, side_b)
             },
         };
