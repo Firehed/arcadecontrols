@@ -30,6 +30,12 @@ pub struct ReadResult {
 
 pub struct MCP23017 {
     i2c: I2C,
+    bank: Bank,
+}
+
+enum Bank {
+    Bank0,
+    Bank1,
 }
 
 enum Side {
@@ -37,7 +43,14 @@ enum Side {
     GpioB,
 }
 
-fn set_chip_to_bank1(i2c: &mut I2C) {
+fn set_chip_to_bank0(i2c: &mut I2C) -> Bank {
+    i2c.write(b"\x15\x04"); // B0?OLATB, B1?IOCON bank=0 seqop=0 haen=1
+    i2c.write(b"\x15\x00"); // OLATB (reset if written above)
+    i2c.write(b"\x0A\x04"); // IOCON force other flags
+    Bank::Bank0
+}
+
+fn set_chip_to_bank1(i2c: &mut I2C) -> Bank {
     // Write 0x84 to register 0x0A. If the chip is in BANK0 mode, this writes to IOCON to set
     // BANK=1 and ODR=1. If already in BANK1 mode, this writes to OLATA. This also keeps the
     // default value of sequential operation (SEQOP)
@@ -46,6 +59,7 @@ fn set_chip_to_bank1(i2c: &mut I2C) {
     // Write 0x00 to 0x0A. The above write guarantees being in BANK1, so this always writes to
     // OLATA, resetting it in case the previous write set something.
     i2c.write(b"\x0a\x00");
+    Bank::Bank1
 }
 
 fn init_side(i2c: &mut I2C, side: Side) {
@@ -71,19 +85,31 @@ fn init_side(i2c: &mut I2C, side: Side) {
 
 impl MCP23017 {
     pub fn new(mut i2c: I2C) -> MCP23017 {
-        set_chip_to_bank1(&mut i2c);
+        let mut bank = set_chip_to_bank1(&mut i2c);
         init_side(&mut i2c, Side::GpioA);
         init_side(&mut i2c, Side::GpioB);
+        bank = set_chip_to_bank0(&mut i2c);
         MCP23017 {
             i2c: i2c,
+            bank: bank,
         }
     }
 
     pub fn read(&mut self) -> ReadResult {
-        self.i2c.write(&[BANK1_GPIOA]);
-        let side_a = self.i2c.get_byte();
-        self.i2c.write(&[BANK1_GPIOB]);
-        let side_b = self.i2c.get_byte();
+        let (side_a,side_b) = match self.bank {
+            Bank::Bank0 => {
+                self.i2c.write(&[BANK0_GPIOA]);
+                self.i2c.get_two_bytes()
+            },
+            Bank::Bank1 => {
+                self.i2c.write(&[BANK1_GPIOA]);
+                let side_a = self.i2c.get_byte();
+                self.i2c.write(&[BANK1_GPIOB]);
+                let side_b = self.i2c.get_byte();
+                (side_a, side_b)
+            },
+        };
+
         return ReadResult {
             a0: side_a & (1 << 0) > 0,
             a1: side_a & (1 << 1) > 0,
