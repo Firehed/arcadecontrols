@@ -16,7 +16,10 @@ fn main() {
         None => "config.ini".to_string(),
     };
 
-    let mut devices = config::from_file(&config_file);
+    let mut devices = match config::from_file(&config_file) {
+        Err(msg) => panic!(msg),
+        Ok(val) => val,
+    };
 
     // TODO: daemonize or something
     loop {

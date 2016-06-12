@@ -20,40 +20,47 @@ impl Config {
     }
 }
 
-pub fn from_file(path: &str) -> Vec<Config> {
-    let conf = Ini::load_from_file(path).unwrap();
+pub fn from_file(path: &str) -> Result<Vec<Config>, &'static str> {
+    // The Ini APIs return a mix of Option and Result types. This works its way through the config
+    // file, checking that a bus is configured and valid, normalizing errors along the way
+    let conf = try!(
+        Ini::load_from_file(path)
+        .map_err(|_| "Config file not found")
+    );
+    let bus = try!(
+        conf
+        .section(None::<String>) // Main section (can't use .general_section because it may panic)
+        .ok_or("Main section missing")
+        .map(|prop_ref| (*prop_ref).clone()) // &ini::Properties -> ini::Properties
+        .and_then(|main| main // look for "bus"
+            .get("bus")
+            .ok_or("'bus' not found in config")
+            .map(|bus_ref| (*bus_ref).clone())
+        )
+        .and_then(|bus| bus // Convert string value to u8
+            .parse::<u8>()
+            .map_err(|_| "Bus must be a number"))
+        .and_then(|bus_int| match bus_int { // validate range
+            0 => Ok(Bus::Dev0),
+            1 => Ok(Bus::Dev1),
+            _ => Err("Bus must be 0 or 1")
+        })
+    );
 
-    let bus = conf.general_section().get("bus").unwrap();
-    let bus = match bus.parse::<u8>().unwrap() {
-        0 => Bus::Dev0,
-        _ => Bus::Dev1,
-    };
 
-    return (0x20..0x28)
-        .map(|i| {
-            return (
-                i,
-                format!("0x{:x}", i)
-            );
-        })
-        .map(|(i, name)| {
-            return (
-                i,
-                conf.section(Some(name).to_owned())
-            );
-        })
-        .filter(|&(_, parsed)| {
-            // Remove addresses with no config
-            return !parsed.is_none();
-        })
+    Ok(
+        (0x20..0x28) // MCP27017 addressable range
+        .map(|i| (i, format!("0x{:x}", i))) // (i, "0x20")
+        .map(|(i, name)| (i, conf.section(Some(name).to_owned()))) // Get sections from file
+        .filter(|&(_, parsed)| !parsed.is_none()) // Remove missing
         .map(|(i, parsed)| {
             // TODO: actually use the parsed section to set up bindings
             let addr = Address::new(i);
-            return Config::new(bus, addr);
+            Config::new(bus, addr)
         })
-        .collect();
+        .collect()
+    )
 }
-
 
 fn get_chip(bus: Bus, address: Address) -> MCP23017 {
     let i2c = match i2c::from_device_and_address(bus, address) {
