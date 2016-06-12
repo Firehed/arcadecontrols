@@ -12,11 +12,11 @@ pub struct Config {
 
 impl Config {
     fn new(bus: Bus, address: Address) -> Config {
-        return Config {
+        Config {
             address: address,
             bus: bus,
             chip: get_chip(bus, address),
-        };
+        }
     }
 }
 
@@ -73,5 +73,5 @@ fn get_chip(bus: Bus, address: Address) -> MCP23017 {
         },
         Ok(value) => value,
     };
-    return MCP23017::new(i2c);
+    MCP23017::new(i2c)
 }

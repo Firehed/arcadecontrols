@@ -49,9 +49,9 @@ pub fn from_device_and_address(device: Bus, address: Address) -> I2CResult {
         Ok(_) => {},
     }
 
-    return Ok(I2C {
+    Ok(I2C {
         fh: file,
-    });
+    })
 }
 
 impl I2C {
@@ -65,7 +65,7 @@ impl I2C {
     pub fn get_byte(&mut self) -> u8 {
         let mut buf = [0; 1];
         let _ = self.fh.read(&mut buf);
-        return buf[0];
+        buf[0]
     }
 
     pub fn get_two_bytes(&mut self) -> (u8,u8) {
@@ -84,17 +84,17 @@ fn set_slave_address(file: &File, slave_address: Address) -> Result<(), nix::Err
     try!(unsafe {
         ioctl_set_i2c_slave_address(fd, slave_address.as_int() as *mut u8)
     });
-    return Ok(());
+    Ok(())
 }
 
 impl Address {
     pub fn new(address: u8) -> Address {
         // Check input range for supported addresses?
-        return Address {
+        Address {
             a0: address & 0x01 == 0x01,
             a1: address & 0x02 == 0x02,
             a2: address & 0x04 == 0x04,
-        };
+        }
     }
 
     pub fn as_int(&self) -> u8 {
@@ -108,15 +108,15 @@ impl Address {
         if self.a2 {
             address = address | 0x04;
         }
-        return address;
+        address
     }
 }
 
 impl Bus {
     pub fn to_fs_path(&self) -> &str {
-        return match *self {
+        match *self {
             Bus::Dev0 => "/dev/i2c-0",
             Bus::Dev1 => "/dev/i2c-1",
-        };
+        }
     }
 }

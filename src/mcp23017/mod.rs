@@ -110,7 +110,7 @@ impl MCP23017 {
             },
         };
 
-        return ReadResult {
+        ReadResult {
             a0: side_a & (1 << 0) > 0,
             a1: side_a & (1 << 1) > 0,
             a2: side_a & (1 << 2) > 0,
@@ -128,6 +128,6 @@ impl MCP23017 {
             b5: side_b & (1 << 5) > 0,
             b6: side_b & (1 << 6) > 0,
             b7: side_b & (1 << 7) > 0,
-        };
+        }
     }
 }
